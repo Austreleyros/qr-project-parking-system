@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+
+    <title>Vehicle Entry / Exit</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ config.get('home_title') }}</div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Home</a>
+            <a href="{{ url_for('entry_exit') }}">Entry/Exit</a>
+            <a href="{{ url_for('logs') }}">Parking Logs</a>
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="{{ url_for('records') }}">Records</a>
+            <a href="{{ url_for('select_area') }}">Select Area Parking</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+            <h1>Vehicle Entry / Exit</h1>
+            <div class="search-bar" style="width:420px;">
+                <input class="global-search-input" placeholder="Search plate or name..." />
+                <button class="global-search-btn btn">Search</button>
+            </div>
+        </div>
+
+        <div id="search-results" class="search-results" style="display:none;"></div>
+
+        <div class="box" style="margin-top:12px;">
+            {% if message %}
+                <div id="message" class="success">{{ message }}</div>
+            {% else %}
+                <div id="message"></div>
+            {% endif %}
+
+            <h2>Manual Entry / Exit</h2>
+            <form id="manualForm" method="POST" onsubmit="return false;">
+                <label>Plate Number:</label><br>
+                <input type="text" id="manualPlate" name="plate_number" placeholder="Enter Plate Number" required><br><br>
+                <button onclick="submitManual()" class="btn">Submit</button>
+            </form>
+
+            <hr>
+
+            <h2>Scan QR Code</h2>
+            <div id="qr-reader" style="width: 100%; max-width: 420px;"></div>
+            <div style="margin-top:8px;">Last Scanned Plate: <span id="scanned-plate">-</span></div>
+        </div>
+    </div>
+
+<script>
+    // Keep same scan cooldown/submit flow but POST to existing endpoint
+    const messageEl = document.getElementById('message');
+    const scannedPlateEl = document.getElementById('scanned-plate');
+    let lastScannedPlate = null;
+    let lastScanTime = 0;
+    const COOLDOWN_MS = 3000;
+
+    function showMessage(msg, success=true){
+        messageEl.innerText = msg;
+        messageEl.className = success ? 'success' : 'error';
+    }
+
+    function submitManual(){
+        const plate = document.getElementById('manualPlate').value.trim();
+        if(!plate) return showMessage("Enter plate", false);
+        // Simulate form post to existing entry_exit route by calling /entry_exit using fetch
+        fetch('/entry_exit', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+            body: 'plate_number=' + encodeURIComponent(plate)
+        }).then(r => r.text()).then(html => {
+            // Simple feedback: show message locally and update scanned plate
+            scannedPlateEl.innerText = plate;
+            showMessage(`Submitted: ${plate}`, true);
+        }).catch(e => showMessage("Network error", false));
+    }
+
+    function handleScan(plate){
+        const now = Date.now();
+        if(plate === lastScannedPlate && (now - lastScanTime < COOLDOWN_MS)) return;
+        lastScannedPlate = plate;
+        lastScanTime = now;
+        scannedPlateEl.innerText = plate;
+
+        fetch('/scan_qr_browser', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ plate_number: plate })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if(data.status === 'entered'){
+                showMessage(`✅ ENTRY SUCCESS: ${data.plate}`, true);
+            } else if(data.status === 'exited'){
+                showMessage(`✅ EXIT SUCCESS: ${data.plate}`, true);
+            } else if(data.status === 'ignored'){
+                showMessage(`⚠️ ${data.message}`, false);
+            } else {
+                showMessage(`⚠️ ${data.message || 'Unknown response'}`, false);
+            }
+        })
+        .catch(err => showMessage("❌ Network error: " + err, false));
+    }
+
+    // QR Scanner render
+    try {
+        let scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: 250 });
+        scanner.render((decodedText, decodedResult) => {
+            handleScan(decodedText);
+        });
+    } catch(e){
+        console.warn("QR scanner not available", e);
+    }
+</script>
+</body>
+</html>

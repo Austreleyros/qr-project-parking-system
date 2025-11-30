@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ lot_name }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #1e88e5;
+            color: white;
+            padding: 15px;
+            font-size: 25px;
+            text-align: center;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .lot-info {
+            font-size: 18px;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        th, td {
+            padding: 10px;
+            border: 1px solid #ccc;
+            text-align: center;
+        }
+
+        th {
+            background: #1e88e5;
+            color: white;
+        }
+
+        a.back-btn {
+            display: inline-block;
+            margin-bottom: 15px;
+            padding: 8px 15px;
+            background: #1e88e5;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+        }
+
+        a.back-btn:hover {
+            background: #0d6cd1;
+        }
+
+        p.no-data {
+            text-align: center;
+            font-size: 18px;
+            color: #444;
+            padding: 20px 0;
+        }
+    </style>
+</head>
+<body>
+
+<header>{{ lot_name }}</header>
+
+<div class="container">
+
+    <a href="/admin_dashboard" class="back-btn">← Back to Dashboard</a>
+
+    <!-- NEW: Lot information -->
+    <div class="lot-info">
+        Capacity: {{ capacity }} |
+        Currently Parked: {{ count }} |
+        Available Slots: {{ available }}
+    </div>
+
+    {% if vehicles and vehicles|length > 0 %}
+    <table>
+        <tr>
+            <th>Plate Number</th>
+            <th>Time In</th>
+        </tr>
+
+        {% for r in vehicles %}
+        <tr>
+            <td>{{ r.plate_number }}</td>
+            <td>{{ r.time_in }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+    {% else %}
+        <p class="no-data">No vehicles currently parked in this lot.</p>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

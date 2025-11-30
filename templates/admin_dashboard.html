@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        body { font-family: Arial, sans-serif; background:#f1f1f1; margin:0; padding:0; }
+        header { background:#1e88e5; color:#fff; padding:15px; text-align:center; font-size:22px; }
+        .container { width:90%; margin:18px auto; }
+        .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+        .card { background:#fff; padding:18px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,0.08); text-align:center;
+                text-decoration:none; color:inherit; display:block; transition:0.18s; }
+        .card:hover { transform:scale(1.02); box-shadow:0 6px 20px rgba(0,0,0,0.12); }
+        .card h3 { margin:0 0 8px 0; font-size:14px; color:#333; font-weight:600; }
+        .card h2 { margin:0; font-size:34px; color:#1e88e5; }
+        .section { background:#fff; padding:18px; margin-top:22px; border-radius:8px; box-shadow:0 0 8px rgba(0,0,0,0.08); }
+        table { width:100%; border-collapse:collapse; margin-top:12px; }
+        th, td { padding:10px; border:1px solid #e0e0e0; text-align:center; font-size:13px; }
+        th { background:#1e88e5; color:#fff; }
+        .view-btn { display:inline-block; padding:6px 10px; background:#1e88e5; color:white; border-radius:6px; text-decoration:none; }
+        .back { margin-bottom:12px; display:inline-block; }
+        .click-row { cursor:pointer; transition:0.12s; }
+        .click-row:hover { background:#f4fbff; }
+        .muted { color:#666; font-size:13px; }
+        .no-data { padding:18px; text-align:center; color:#666; }
+        @media (max-width:900px) { .grid { grid-template-columns:repeat(2,1fr); } }
+        @media (max-width:600px) { .grid { grid-template-columns:1fr; } .card h2 { font-size:28px; } }
+    </style>
+</head>
+<body>
+
+<header>QR Parking System — Admin Dashboard</header>
+
+<div class="container">
+
+    <!-- TOP CARDS: only shown when no `section` is active.
+         Your view routes set `section` when clicked; if `section` is present we still show the cards
+         (user requested top cards be visible), but you requested only the clicked card to show details.
+         We'll keep the cards visible, details shown below when `section` is set. -->
+    <div class="grid" role="navigation" aria-label="dashboard-cards">
+        <a class="card" href="{{ url_for('registered_today_page') }}">
+            <h3>Total Registered Users Today</h3>
+            <h2>{{ total_registered_today if total_registered_today is defined else '—' }}</h2>
+        </a>
+
+        <a class="card" href="{{ url_for('total_registered_page') }}">
+            <h3>Total Registered Users (All Time)</h3>
+            <h2>{{ total_registered if total_registered is defined else '—' }}</h2>
+        </a>
+
+        <a class="card" href="{{ url_for('active_parked_page') }}">
+            <h3>Active Parked Vehicles</h3>
+            <h2>{{ active_parked if active_parked is defined else '—' }}</h2>
+        </a>
+
+        <a class="card" href="{{ url_for('entries_today_page') }}">
+            <h3>Total Entries Today</h3>
+            <h2>{{ entries_today if entries_today is defined else '—' }}</h2>
+        </a>
+
+        <a class="card" href="{{ url_for('exits_today_page') }}">
+            <h3>Total Exits Today</h3>
+            <h2>{{ exits_today if exits_today is defined else '—' }}</h2>
+        </a>
+
+        <a class="card" href="{{ url_for('view_overstay') }}">
+            <h3>Parking Overstay (Overnight)</h3>
+            <h2>{{ overstay_count if overstay_count is defined else '—' }}</h2>
+        </a>
+    </div>
+
+    <!-- PER LOT SUMMARY (always visible) -->
+    <div class="section" aria-labelledby="parking-lot-summary">
+        <h2 id="parking-lot-summary">Vehicles in Each Parking Lot</h2>
+
+        {% if parking_lots is defined and parking_lots %}
+        <table>
+            <tr>
+                <th>Parking Lot</th>
+                <th>Capacity</th>
+                <th>Currently Parked</th>
+                <th>Available Slots</th>
+            </tr>
+
+            {% for lot in parking_lots %}
+            <tr>
+                <td>{{ lot.area_name or lot.name or '—' }}</td>
+                <td>{{ lot.capacity if lot.capacity is defined else '—' }}</td>
+                <td>
+                    <a class="view-btn" href="{{ url_for('view_lot', lot_code=lot.area_code) }}">View</a>
+                    <div class="muted" style="margin-top:8px;">{{ lot.current_count if lot.current_count is defined else '0' }}</div>
+                    <div style="margin-top:6px; font-size:13px;">
+                        {% if lot.parked_today %}
+                            {% for p in lot.parked_today %}{{ p }}{% if not loop.last %}, {% endif %}{% endfor %}
+                        {% else %}
+                            <span class="muted">No plates</span>
+                        {% endif %}
+                    </div>
+                </td>
+                <td>{{ (lot.capacity - lot.current_count) if (lot.capacity is defined and lot.current_count is defined) else '—' }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <div class="no-data">No parking lot records found.</div>
+        {% endif %}
+    </div>
+
+    <!-- DAILY ENTRY SUMMARY (always visible) -->
+    <div class="section" aria-labelledby="daily-entry-summary">
+        <h2 id="daily-entry-summary">Daily Entry Summary</h2>
+
+        {% if daily_report is defined and daily_report %}
+        <table>
+            <tr><th>Date</th><th>Total Entries</th><th>Total Exits</th></tr>
+            {% for row in daily_report %}
+            <tr class="click-row" onclick="location.href='{{ url_for('view_daily', date_text=row.date) }}'">
+                <td>{{ row.date }}</td>
+                <td>{{ row.entries }}</td>
+                <td>{{ row.exits }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <div class="no-data">No daily report data.</div>
+        {% endif %}
+    </div>
+
+    <!-- MONTHLY ENTRY SUMMARY (always visible) -->
+    <div class="section" aria-labelledby="monthly-entry-summary">
+        <h2 id="monthly-entry-summary">Monthly Entry Summary</h2>
+
+        {% if monthly_report is defined and monthly_report %}
+        <table>
+            <tr><th>Month</th><th>Total Entries</th><th>Total Exits</th></tr>
+            {% for row in monthly_report %}
+            <tr class="click-row" onclick="location.href='{{ url_for('view_month', month=row.month) }}'">
+                <td>{{ row.month }}</td>
+                <td>{{ row.entries }}</td>
+                <td>{{ row.exits }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        {% else %}
+            <div class="no-data">No monthly report data.</div>
+        {% endif %}
+    </div>
+
+    <!-- ===================== DETAILED SECTION (shows ONLY when `section` is set) ===================== -->
+    {% if section %}
+    <div class="section" aria-labelledby="detail-section">
+        <a class="view-btn back" href="{{ url_for('admin_dashboard') }}">⬅ Back to Dashboard</a>
+
+        {% if section == "registered_today" %}
+            <h2>Registered Users Today</h2>
+            {% if users %}
+            <table>
+                <tr><th>Full Name</th><th>ID</th><th>Type</th><th>Mobile</th><th>Plate</th><th>Date</th></tr>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.full_name }}</td>
+                    <td>{{ u.id_number }}</td>
+                    <td>{{ u.vehicle_type }}</td>
+                    <td>{{ u.mobile_no }}</td>
+                    <td>{{ u.plate_number }}</td>
+                    <td>{{ u.created_at if u.created_at is defined else '' }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No registered users for today.</div>
+            {% endif %}
+        {% endif %}
+
+        {% if section == "total_registered" %}
+            <h2>All Registered Users</h2>
+            {% if users %}
+            <table>
+                <tr><th>Full Name</th><th>ID</th><th>Type</th><th>Mobile</th><th>Plate</th></tr>
+                {% for u in users %}
+                <tr>
+                    <td>{{ u.full_name }}</td>
+                    <td>{{ u.id_number }}</td>
+                    <td>{{ u.vehicle_type }}</td>
+                    <td>{{ u.mobile_no }}</td>
+                    <td>{{ u.plate_number }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No registered users.</div>
+            {% endif %}
+        {% endif %}
+
+        {% if section == "active_parked" %}
+            <h2>Active Parked Vehicles</h2>
+            {% if vehicles %}
+            <table>
+                <tr><th>Plate</th><th>Time In</th><th>Parking Area</th></tr>
+                {% for v in vehicles %}
+                <tr>
+                    <td>{{ v.plate_number }}</td>
+                    <td>{{ v.time_in }}</td>
+                    <td>{{ v.parking_area }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No active parked vehicles.</div>
+            {% endif %}
+        {% endif %}
+
+        {% if section == "entries_today" %}
+            <h2>Entries Today</h2>
+            {% if entries %}
+            <table>
+                <tr><th>Plate</th><th>Time In</th><th>Parking Area</th></tr>
+                {% for e in entries %}
+                <tr>
+                    <td>{{ e.plate_number }}</td>
+                    <td>{{ e.time_in }}</td>
+                    <td>{{ e.parking_area }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No entries recorded today.</div>
+            {% endif %}
+        {% endif %}
+
+        {% if section == "exits_today" %}
+            <h2>Exits Today</h2>
+            {% if exits %}
+            <table>
+                <tr><th>Plate</th><th>Time Out</th><th>Parking Area</th></tr>
+                {% for e in exits %}
+                <tr>
+                    <td>{{ e.plate_number }}</td>
+                    <td>{{ e.time_out }}</td>
+                    <td>{{ e.parking_area }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No exits recorded today.</div>
+            {% endif %}
+        {% endif %}
+
+        {% if section == "overstay" %}
+            <h2>Overstay Vehicles</h2>
+            {% if vehicles %}
+            <table>
+                <tr><th>Plate</th><th>Time In</th><th>Parking Area</th></tr>
+                {% for v in vehicles %}
+                <tr>
+                    <td>{{ v.plate_number }}</td>
+                    <td>{{ v.time_in }}</td>
+                    <td>{{ v.parking_area }}</td>
+                </tr>
+                {% endfor %}
+            </table>
+            {% else %}
+            <div class="no-data">No overstay vehicles.</div>
+            {% endif %}
+        {% endif %}
+
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <title>Registered Vehicles</title>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ config.get('home_title') }}</div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Home</a>
+            <a href="{{ url_for('entry_exit') }}">Entry/Exit</a>
+            <a href="{{ url_for('logs') }}">Parking Logs</a>
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="{{ url_for('records') }}">Records</a>
+            <a href="{{ url_for('select_area') }}">Select Area Parking</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h1>Registered Vehicles</h1>
+            <div class="search-bar" style="width:420px;">
+                <input class="global-search-input" placeholder="Search plate or owner..." />
+                <button class="global-search-btn btn">Search</button>
+            </div>
+        </div>
+
+        <div id="search-results" class="search-results" style="display:none;"></div>
+
+        <div class="box" style="margin-top:12px;">
+            {% if message %}
+                <p class="error">{{ message }}</p>
+            {% endif %}
+
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Plate Number</th>
+                        <th>Full Name</th>
+                        <th>Vehicle Type</th>
+                        <th>Mobile No</th>
+                        <th>QR Code</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td>{{ u["plate_number"] }}</td>
+                        <td>{{ u["full_name"] }}</td>
+                        <td>{{ u["vehicle_type"] }}</td>
+                        <td>{{ u["mobile_no"] }}</td>
+                        <td>
+                            <img src="{{ url_for('static', filename='qrcodes/' + u['plate_number'] + '.png') }}" width="100">
+                        </td>
+                        <td>
+                            <a class="btn" href="{{ url_for('delete_vehicle', plate_number=u['plate_number']) }}">Delete</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div style="margin-top:12px;">
+                <a class="btn" href="{{ url_for('register') }}">Back to Registration</a>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

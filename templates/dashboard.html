@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f1f1;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background: #1e88e5;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 25px;
+        }
+
+        .container {
+            width: 90%;
+            margin: 20px auto;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .card h2 {
+            font-size: 45px;
+            color: #1e88e5;
+            margin-top: 10px;
+        }
+
+        .card:hover {
+            box-shadow: 0 0 12px rgba(0,0,0,0.2);
+            transform: scale(1.02);
+            transition: 0.2s;
+        }
+    </style>
+
+</head>
+<body>
+
+<header>QR Parking System — Admin Dashboard</header>
+
+<div class="container">
+
+    <!-- Summary Cards -->
+    <div class="grid">
+
+        <div class="card">
+            <h3>Total Registered Users Today</h3>
+            <h2>{{ total_registered_today }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Total Registered Users (All Time)</h3>
+            <h2>{{ total_registered }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Active Parked Vehicles</h3>
+            <h2>{{ active_parked }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Total Entries Today</h3>
+            <h2>{{ entries_today }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Total Exits Today</h3>
+            <h2>{{ exits_today }}</h2>
+        </div>
+
+        <div class="card">
+            <h3>Parking Overstay (Overnight)</h3>
+            <h2>{{ overstay_count }}</h2>
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

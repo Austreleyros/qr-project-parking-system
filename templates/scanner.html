@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <title>Scanner - {{ area.area_name }}</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ config.get('home_title') }}</div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Home</a>
+            <a href="{{ url_for('entry_exit') }}">Entry/Exit</a>
+            <a href="{{ url_for('logs') }}">Parking Logs</a>
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="{{ url_for('records') }}">Records</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1>Scanner - {{ area.area_name }}</h1>
+        <div class="box">
+            <div id="qrbox" style="width:320px; max-width:100%; border-radius:12px; overflow:hidden;">
+                <div id="qr-reader" style="width:100%;"></div>
+            </div>
+
+            <h3>Manual Input</h3>
+            <input type="text" id="manual_plate" placeholder="Plate Number">
+            <button class="btn" onclick="manualScan()">Submit</button>
+
+            <div id="result" style="margin-top:12px;"></div>
+        </div>
+    </div>
+
+<script>
+function flashSuccess() {
+    const box = document.getElementById("qrbox");
+    box.style.background = "rgba(0,255,0,0.12)";
+    setTimeout(() => box.style.background = "transparent", 350);
+}
+
+function onScanSuccess(decodedText) {
+    flashSuccess();
+    fetch("/scan_area/{{ area.area_code }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qr_text: decodedText })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerText = JSON.stringify(data);
+    });
+}
+
+try {
+    let scanner = new Html5QrcodeScanner("qr-reader", { fps: 10, qrbox: { width: 250, height: 250 } });
+    scanner.render(onScanSuccess);
+} catch(e){
+    console.warn("Scanner init failed", e);
+}
+
+function manualScan() {
+    let plate = document.getElementById("manual_plate").value.trim();
+    if (!plate) return alert("Enter plate number");
+    flashSuccess();
+    fetch("/scan_area/{{ area.area_code }}", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ qr_text: plate })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("result").innerText = JSON.stringify(data);
+    });
+}
+</script>
+</body>
+</html>

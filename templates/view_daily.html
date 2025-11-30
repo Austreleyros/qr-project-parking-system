@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Daily Logs</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f8f8f8; padding: 20px; }
+        h2 { text-align: center; color: #007bff; }
+        table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 20px; }
+        th { background: #0d8cf0; color: white; padding: 12px; }
+        td { padding: 12px; border: 1px solid #ddd; text-align: center; }
+    </style>
+</head>
+<body>
+
+<h2>Logs for {{ date }}</h2>
+
+<table>
+    <thead>
+        <tr>
+            <th>Plate Number</th>
+            <th>Time In</th>
+            <th>Time Out</th>
+            <th>Parking Area</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for v in vehicles %}
+        <tr>
+            <td>{{ v.plate_number }}</td>
+            <td>{{ v.time_in }}</td>
+            <td>{{ v.time_out if v.time_out else "Still Inside" }}</td>
+            <td>{{ v.parking_area }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+</body>
+</html>

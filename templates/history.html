@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <title>Entry/Exit History</title>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ config.get('home_title') }}</div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Home</a>
+            <a href="{{ url_for('entry_exit') }}">Entry/Exit</a>
+            <a href="{{ url_for('logs') }}">Parking Logs</a>
+            <a href="{{ url_for('history') }}">History</a>
+            <a href="{{ url_for('records') }}">Records</a>
+            <a href="{{ url_for('select_area') }}">Select Area Parking</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h2>Entry / Exit History</h2>
+        <div class="box">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Plate Number</th>
+                        <th>Time In</th>
+                        <th>Time Out</th>
+                        <th>Parking Area</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for log in logs %}
+                    <tr class="{% if not log.time_out %}entered{% else %}exited{% endif %}">
+                        <td>{{ log.id }}</td>
+                        <td>{{ log.plate_number }}</td>
+                        <td>{{ log.time_in if log.time_in else '-' }}</td>
+                        <td>{{ log.time_out if log.time_out else '-' }}</td>
+                        <td>{{ log.parking_area if log.parking_area else 'Not Assigned' }}</td>
+                        <td>{% if not log.time_out %}Entered{% else %}Exited{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</body>
+</html>

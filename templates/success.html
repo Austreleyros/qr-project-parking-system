@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    <title>Registration Success</title>
+</head>
+<body>
+    <div class="navbar">
+        <div class="logo">{{ config.get('home_title') }}</div>
+        <div class="nav-links">
+            <a href="{{ url_for('register') }}">Home</a>
+            <a href="{{ url_for('records') }}">Records</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="box" style="text-align:center;">
+            <h1>Vehicle Registered Successfully!</h1>
+            <p>Plate Number: <strong>{{ plate_number }}</strong></p>
+            <img src="{{ url_for('static', filename='qrcodes/' + plate_number + '.png') }}" width="150" alt="QR Code"><br><br>
+            <a class="btn" href="{{ url_for('register') }}">Back to Registration</a>
+        </div>
+    </div>
+</body>
+</html>

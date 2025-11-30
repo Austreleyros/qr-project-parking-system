@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Registered Vehicles</title>
+    <style>
+        body {
+            background: #f8f8f8;
+            font-family: Arial;
+            padding: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            margin-top: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        }
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background: green;
+            color: white;
+        }
+        tr:hover {
+            background: #f1f1f1;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Registered Vehicles</h1>
+
+    <table>
+        <tr>
+            <th>Full Name</th>
+            <th>ID Number</th>
+            <th>Vehicle Type</th>
+            <th>Mobile No.</th>
+            <th>Plate Number</th>
+        </tr>
+
+        {% for u in users %}
+        <tr>
+            <td>{{ u.full_name }}</td>
+            <td>{{ u.id_number }}</td>
+            <td>{{ u.vehicle_type }}</td>
+            <td>{{ u.mobile_no }}</td>
+            <td>{{ u.plate_number }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</body>
+</html>
